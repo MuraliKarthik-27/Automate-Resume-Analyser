@@ -1,0 +1,8 @@
+[client]
+showWarningOnDirectExecution = false
+
+[logger]
+level = "error"
+
+[server]
+maxUploadSize = 200
