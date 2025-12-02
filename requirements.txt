@@ -1,0 +1,10 @@
+streamlit
+pdfplumber
+spacy
+scikit-learn
+numpy
+# Install from requirements
+#/workspaces/Automate-Resume-Analyser/.venv/bin/python -m pip install -r /workspaces/Automate-Resume-Analyser/requirements.txt
+
+# Download SpaCy model
+#/workspaces/Automate-Resume-Analyser/.venv/bin/python -m spacy download en_core_web_sm
