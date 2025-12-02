@@ -1,3 +1,17 @@
+import subprocess
+import sys
+import os
+
+# Download SpaCy model if not present
+try:
+    import spacy
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
+except Exception as e:
+    pass
+
 import streamlit as st
 import pdfplumber
 import re
