@@ -381,88 +381,269 @@ def predict_selection_chance(score, extracted_skills, target_skills, resume_text
         }
 
 # Streamlit App
-st.title("📄 Resume Analyzer")
-st.write("Select a job category or let the model predict one, then upload your resume.")
+# ============================
+# APPLE DARK THEME
+# ============================
 
-# Category selection
-try:
-    category_option = st.selectbox(
-        "Select Job Category (or 'Predict' for auto-detection)",
-        options=["Predict", "Data Science", "Data Analyst", "Software Development",
-                 "UI/UX Designer", "AI/ML", "Frontend Developer",
-                 "Backend Developer", "Full Stack Developer"]
-    )
-except Exception as e:
-    st.error(f"Error rendering category selector: {e}")
-    st.stop()
+st.markdown("""
+<style>
 
-st.write("📤 Upload your resume (PDF only)")
-try:
-    uploaded_file = st.file_uploader("", type=["pdf"], accept_multiple_files=False)
-except Exception as e:
-    st.error(f"Error rendering file uploader: {e}")
-    st.stop()
+.stApp{
+    background:#0b0b0d;
+}
 
+/* Hide streamlit menu */
+#MainMenu {visibility:hidden;}
+footer {visibility:hidden;}
+header {visibility:hidden;}
+
+.hero{
+    text-align:center;
+    padding:20px;
+}
+
+.hero-title{
+    font-size:4rem;
+    font-weight:700;
+    color:white;
+}
+
+.hero-sub{
+    color:#9ca3af;
+    font-size:1.2rem;
+}
+
+/* Glass cards */
+.metric-card{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    backdrop-filter:blur(20px);
+    border-radius:24px;
+    padding:25px;
+    text-align:center;
+}
+
+.metric-value{
+    color:white;
+    font-size:2rem;
+    font-weight:700;
+}
+
+.metric-label{
+    color:#9ca3af;
+}
+
+.skill{
+    display:inline-block;
+    padding:10px 18px;
+    border-radius:999px;
+    background:#16181d;
+    color:white;
+    margin:4px;
+}
+
+.upload-box{
+    padding:20px;
+    border-radius:24px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class='hero'>
+    <div class='hero-title'>ResumeAI</div>
+    <div class='hero-sub'>
+        Intelligent Resume Screening Platform
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+category_option = st.selectbox(
+    "Target Role",
+    [
+        "Predict",
+        "Data Science",
+        "Data Analyst",
+        "Software Development",
+        "UI/UX Designer",
+        "AI/ML",
+        "Frontend Developer",
+        "Backend Developer",
+        "Full Stack Developer"
+    ]
+)
+
+uploaded_file = st.file_uploader(
+    "Upload Resume PDF",
+    type=["pdf"]
+)
 if uploaded_file:
-    with st.spinner("Processing resume..."):
-        resume_text = extract_text_from_pdf(uploaded_file)
-        if resume_text:
-            st.success("PDF uploaded and processed successfully!")
 
-            # Extract details
+    with st.spinner("Analyzing Resume..."):
+
+        resume_text = extract_text_from_pdf(uploaded_file)
+
+        if resume_text:
+
             name = extract_name(resume_text, ALL_SKILLS)
             age = extract_birth_year(resume_text)
             email = extract_email(resume_text)
             phone = extract_phone_number(resume_text)
 
-            # Determine category and skills
             if category_option == "Predict":
-                category, score, extracted_skills, target_skills = find_best_category(resume_text, CATEGORY_SKILLS)
-                # st.write(f"DEBUG: Predicted category: {category} with score {score}%")  # Debug logging
+                category, score, extracted_skills, target_skills = \
+                    find_best_category(
+                        resume_text,
+                        CATEGORY_SKILLS
+                    )
             else:
                 category = category_option
                 target_skills = CATEGORY_SKILLS.get(category, [])
-                extracted_skills = extract_skills(resume_text, target_skills)
-                score = calculate_resume_score(extracted_skills, target_skills)
-                # st.write(f"DEBUG: Selected category: {category} with score {score}%")  # Debug logging
 
-            # Predict selection chance
-            selection_info = predict_selection_chance(score, extracted_skills, target_skills, resume_text, category, CATEGORY_SKILLS)
+                extracted_skills = extract_skills(
+                    resume_text,
+                    target_skills
+                )
 
-            # Display results
-            st.header("📊 Analysis Result")
-            st.write(f"🧑 **Name**: {name}")
-            st.write(f"📧 **Email**: {email}")
-            st.write(f"📞 **Phone Number**: {phone}")
-            if age:
-                st.write(f"🎂 **Estimated Age**: {age}")
-            st.write(f"💼 **Category**: {category} {'(Predicted)' if category_option == 'Predict' else '(Selected)'}")
-            st.write(f"📌 **Extracted Skills**: {', '.join(extracted_skills) if extracted_skills else 'None'}")
-            st.write(f"🏆 **Resume Score**: {score}% (based on {len(extracted_skills)} out of {len(target_skills)} required skills)")
-            st.progress(score / 100)
-            st.write(f"🎯 **Selection Chance**: {selection_info['chance']} ({selection_info['chance_description']})")
+                score = calculate_resume_score(
+                    extracted_skills,
+                    target_skills
+                )
 
-            # Display recommendations
+            selection_info = predict_selection_chance(
+                score,
+                extracted_skills,
+                target_skills,
+                resume_text,
+                category,
+                CATEGORY_SKILLS
+            )
+
+            st.success("Analysis Complete")
+
+            # ======================
+            # METRIC CARDS
+            # ======================
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.markdown(f"""
+                <div class='metric-card'>
+                    <div class='metric-value'>{score}%</div>
+                    <div class='metric-label'>Resume Score</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f"""
+                <div class='metric-card'>
+                    <div class='metric-value'>{category}</div>
+                    <div class='metric-label'>Predicted Role</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                st.markdown(f"""
+                <div class='metric-card'>
+                    <div class='metric-value'>{selection_info['chance']}</div>
+                    <div class='metric-label'>Selection Chance</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            # ======================
+            # PROFILE
+            # ======================
+
+            st.subheader("👤 Candidate Profile")
+
+            c1, c2 = st.columns(2)
+
+            with c1:
+                st.write(f"**Name:** {name}")
+                st.write(f"**Email:** {email}")
+
+            with c2:
+                st.write(f"**Phone:** {phone}")
+
+                if age:
+                    st.write(f"**Age:** {age}")
+
+            # ======================
+            # SKILLS
+            # ======================
+
+            st.subheader("🛠 Skills")
+
+            html = ""
+
+            for skill in extracted_skills:
+                html += f"""
+                <span class='skill'>
+                    {skill}
+                </span>
+                """
+
+            st.markdown(
+                html,
+                unsafe_allow_html=True
+            )
+
+            st.markdown("---")
+
+            # ======================
+            # RECOMMENDATIONS
+            # ======================
+
             st.subheader("🚀 Recommendations")
-            st.write("**To Improve Your Resume**:")
-            for tip in selection_info['improvement_tips']:
-                st.write(f"- {tip}")
-            st.write("**Safer Side Strategy**:")
-            for strategy in selection_info['safer_side']:
-                st.write(f"- {strategy}")
 
-            # Learning resources
-            missing_skills = [skill for skill in target_skills if skill.lower() not in extracted_skills]
+            for tip in selection_info["improvement_tips"]:
+                st.write("✅", tip)
+
+            st.subheader("🎯 Career Strategy")
+
+            for item in selection_info["safer_side"]:
+                st.write("📌", item)
+
+            # ======================
+            # LEARNING RESOURCES
+            # ======================
+
+            missing_skills = [
+                skill
+                for skill in target_skills
+                if skill.lower() not in extracted_skills
+            ]
+
             if missing_skills:
-                st.subheader("📚 Recommended Learning Resources")
-                seen_urls = set()
+
+                st.subheader(
+                    "📚 Learning Resources"
+                )
+
+                shown = set()
+
                 for skill in missing_skills:
-                    resources = LEARNING_RESOURCES.get(skill.lower(), [])
+
+                    resources = LEARNING_RESOURCES.get(
+                        skill.lower(),
+                        []
+                    )
+
                     for url in resources:
-                        if url not in seen_urls:
-                            st.markdown(f"🔗 [Learn {skill.title()}]({url})")
-                            seen_urls.add(url)
-            else:
-                st.write(f"✅ **Feedback**: Great! You have all the necessary skills for {category}.")
+
+                        if url not in shown:
+
+                            st.markdown(
+                                f"🔗 [{skill}]({url})"
+                            )
+
+                            shown.add(url)
+
         else:
-            st.error("Failed to extract text from the PDF. Ensure it's a text-based PDF and try again.")
+            st.error(
+                "Unable to extract text from PDF"
+            )
