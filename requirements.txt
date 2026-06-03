@@ -3,6 +3,7 @@ pdfplumber
 spacy
 scikit-learn
 numpy
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 # Install from requirements
 #/workspaces/Automate-Resume-Analyser/.venv/bin/python -m pip install -r /workspaces/Automate-Resume-Analyser/requirements.txt
 
